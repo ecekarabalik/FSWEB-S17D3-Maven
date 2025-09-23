@@ -9,19 +9,15 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @RestController
-@RequestMapping("/koalas") // Tam yol: /workintech/koalas
+@RequestMapping("/koalas")
 public class KoalaController {
 
-    // görev: map adı "koalas"
     private final Map<Integer, Koala> koalas = new ConcurrentHashMap<>();
 
-    public KoalaController() {
-        koalas.put(1, new Koala(1, "Koko", 12.5, 18, "FEMALE"));
-        koalas.put(2, new Koala(2, "Milo", 10.1, 20, "MALE"));
-    }
-
     @GetMapping
-    public List<Koala> getAll() { return new ArrayList<>(koalas.values()); }
+    public List<Koala> getAll() {
+        return new ArrayList<>(koalas.values());
+    }
 
     @GetMapping("/{id}")
     public Koala getById(@PathVariable Integer id) {
@@ -31,14 +27,11 @@ public class KoalaController {
     }
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
     public Koala create(@RequestBody Koala koala) {
         if (koala.getId() == null)
             throw new ZooException("Id is required", HttpStatus.BAD_REQUEST);
-        if (koalas.containsKey(koala.getId()))
-            throw new ZooException("Koala already exists with id: " + koala.getId(), HttpStatus.CONFLICT);
-        koalas.put(koala.getId(), koala);
-        return koala;
+        koalas.put(koala.getId(), koala); // upsert
+        return koala; // 200
     }
 
     @PutMapping("/{id}")
@@ -47,14 +40,14 @@ public class KoalaController {
             throw new ZooException("Koala not found with id: " + id, HttpStatus.NOT_FOUND);
         incoming.setId(id);
         koalas.put(id, incoming);
-        return incoming;
+        return incoming; // 200
     }
 
     @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Integer id) {
+    public Koala delete(@PathVariable Integer id) {
         Koala removed = koalas.remove(id);
         if (removed == null)
             throw new ZooException("Koala not found with id: " + id, HttpStatus.NOT_FOUND);
+        return removed; // 200
     }
 }
